@@ -1,7 +1,6 @@
 (ns arduieensy-deployment-alert.daemon
-  (:require [clj-http.client :as client]))
-
-(def daemon-agent (agent ))
+  (:require [clj-http.client :as client])
+  (:require [arduieensy-deployment-alert.orb :as orb]))
 
 (defn- pipeline-state []
   (let [response (client/get "http://localhost:8000/pipeline/1338997244.json"
@@ -24,14 +23,25 @@
     (cond (and (nil? pipeline-state) (nil? badger-state))
           [:color :none :throbbing? false]
           (nil? pipeline-state)
-          [:color :green :throbbing? true}
+          [:color :green :throbbing? true]
           (some #{(pipeline-state :state)} ["INITIAL" "CREATED" "DEPLOYING" "IN_PROGRESS"])
-          [:color :green :throbbing? (pipeline-state :waiting?)}
+          [:color :green :throbbing? (pipeline-state :waiting?)]
           (some #{(pipeline-state :state)} ["FAILED"])
-          [:color :yellow :throbbing? (pipeline-state :waiting?)})))
+          [:color :yellow :throbbing? (pipeline-state :waiting?)])))
 
-(let [new-state (alert-state)
-      new-color (:color new-state)
-      new-throbbing? (:throbing? new-state)]
-      (dosync (ref-set (orb/orb :current-color) new-color)
-              (ref-set (orb/orb :throbbing?) new-throbbing?)))
+(defn update [orb]
+  (let [new-state (alert-state)
+        new-color (:color new-state)
+        new-throbbing? (:throbing? new-state)]
+    (do 
+      (dosync (ref-set (orb :current-color) new-color)
+              (ref-set (orb :throbbing?) new-throbbing?))
+      (Thread/sleep 1000)
+      (recur orb))))
+
+(defn -main []
+  (let [orb-agent (agent orb/orb)]
+  (do (send-off orb-agent orb/update!)
+      (update orb/orb))))
+
+(-main)
