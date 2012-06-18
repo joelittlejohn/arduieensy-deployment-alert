@@ -47,13 +47,13 @@
         (write-to-pin! pin value)
         (Thread/sleep (orb :color-ramp-interval)))))
 
-(defn- orb-update! [orb]
+(defn update! [orb]
   (if (orb :throbbing?)
     (do (ramp-up! orb (orb :current-color))
         (ramp-down! orb (orb :current-color))
         (recur orb))
     (do (jump-to! orb (orb :current-color))
-        (Thread/sleep 500)
+        (Thread/sleep 1000)
         (recur orb))))
  
 (defn set-color!
