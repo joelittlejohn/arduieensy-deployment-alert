@@ -1,6 +1,7 @@
 (ns arduieensy-deployment-alert.daemon
   (:require [clj-http.client :as client])
-  (:require [arduieensy-deployment-alert.orb :as orb]))
+  (:require [arduieensy-deployment-alert.orb :as orb])
+  (:gen-class))
 
 (defn- pipeline-state []
   (let [response (client/get "http://localhost:8000/pipeline/1338997244.json"

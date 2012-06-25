@@ -4,4 +4,5 @@
                  [org.clojure/clojure-contrib "1.2.0"]
                  [org.rxtx/rxtx "2.1.7"]
                  [clj-http "0.4.2"]]
-  :jvm-opts ["-Djava.library.path=/usr/lib/jni" "-Dgnu.io.rxtx.SerialPorts=/dev/ttyACM0"])
+  :jvm-opts ["-Djava.library.path=/usr/lib/jni" "-Dgnu.io.rxtx.SerialPorts=/dev/ttyACM0"]
+  :main arduieensy-deployment-alert.daemon)
