@@ -17,10 +17,12 @@
      :waiting? (get body :requiresInput)}))
 
 (defn- badger-state []
-  (let [response (client/get "http://pipeline.brislabs.com:8080/pipeline/ws/2.x/badgers/current"
+  (if-let [body ((client/get "http://pipeline.brislabs.com:8080/pipeline/ws/2.x/badgers/current"
                              {:as :json
-                              :throw-exceptions false})]
-    (get-in response [:body :acquireUser])))
+                              :throw-exceptions false}) :body)]
+    (let [user (get body :acquireUser)]
+      (if (or (empty? users) (some #{user} users))
+        user))))
 
 (defn- alert-state []
   (let [pipeline-state (pipeline-state)
