@@ -15,8 +15,8 @@
   (loop [pids (enumeration-seq (CommPortIdentifier/getPortIdentifiers))]
     (if (= CommPortIdentifier/PORT_SERIAL (.getPortType (first pids)))
       (let [serial-port (.open (first pids) "ArduieensyExtremeFeedback" 2000)]
-        (do (.setSerialPortParams serial-port 57600 SerialPort/DATABITS_8 SerialPort/STOPBITS_1 SerialPort/PARITY_NONE)            
-            (.getOutputStream serial-port)))
+        (.setSerialPortParams serial-port 57600 SerialPort/DATABITS_8 SerialPort/STOPBITS_1 SerialPort/PARITY_NONE)            
+        (.getOutputStream serial-port))
       (recur (rest pids)))))
 
 (defn- open [orb]

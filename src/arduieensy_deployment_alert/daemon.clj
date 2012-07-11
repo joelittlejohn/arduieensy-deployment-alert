@@ -10,16 +10,14 @@
   (str (System/getenv "PIPELINE_URL") "/ws/2.x/badgers/current"))
 
 (defn- pipeline-state []
-  (let [response (client/get current-pipeline-url
+  (if-let [body ((client/get "http://pipeline.brislabs.com:8080/pipeline/ws/2.x/pipelines/current"
                              {:as :json
-                              :throw-exceptions false})
-        failed? (get-in response [:body :inFailedState])
-        waiting? ((last (get-in response [:body :environmentDeployments])) :requiresInput)]
-    {:failed? failed?
-     :waiting? waiting?}))
+                              :throw-exceptions false}) :body)]
+    {:failed? (get body :inFailedState)
+     :waiting? (get body :requiresInput)}))
 
-(defn- badger-state [] 
-  (let [response (client/get current-badger-url
+(defn- badger-state []
+  (let [response (client/get "http://pipeline.brislabs.com:8080/pipeline/ws/2.x/badgers/current"
                              {:as :json
                               :throw-exceptions false})]
     (get-in response [:body :acquireUser])))
@@ -40,11 +38,10 @@
   (let [new-state (alert-state)
         new-color (:color new-state)
         new-throbbing? (:throbbing? new-state)]
-    (do
       (dosync (ref-set (orb :current-color) new-color)
               (ref-set (orb :throbbing?) new-throbbing?))
       (Thread/sleep 2000)
-      (recur orb))))
+      (recur orb)))
 
 (defn -main []
   (let [orb (orb/start!)]
