@@ -1,6 +1,7 @@
 (ns arduieensy-deployment-alert.daemon
   (:require [clj-http.client :as client])
   (:require [arduieensy-deployment-alert.orb :as orb])
+  (:require [clojure.contrib.string :as string])
   (:gen-class))
 
 (def current-pipeline-url
@@ -9,18 +10,20 @@
 (def current-badger-url
   (str (System/getenv "PIPELINE_URL") "/ws/2.x/badgers/current"))
 
+(def users [])
+
 (defn- pipeline-state []
-  (if-let [body ((client/get "http://pipeline.brislabs.com:8080/pipeline/ws/2.x/pipelines/current"
+  (if-let [body ((client/get current-pipeline-url
                              {:as :json
                               :throw-exceptions false}) :body)]
-    {:failed? (get body :inFailedState)
-     :waiting? (get body :requiresInput)}))
+    {:failed? (body :inFailedState)
+     :waiting? ((last (body :environmentDeployments)) :requiresInput)}))
 
 (defn- badger-state []
-  (if-let [body ((client/get "http://pipeline.brislabs.com:8080/pipeline/ws/2.x/badgers/current"
+  (if-let [body ((client/get current-badger-url
                              {:as :json
                               :throw-exceptions false}) :body)]
-    (let [user (get body :acquireUser)]
+    (let [user (body :acquireUser)]
       (if (or (empty? users) (some #{user} users))
         user))))
 
