@@ -2,9 +2,9 @@
   (:import (gnu.io CommPortIdentifier SerialPort))
   (:require [clojure.set :as set]))
 
-(def orb {:pins {:blue #{12} :green #{14} :red #{15}
-                 :yellow #{14 15} :cyan #{12 14} :magenta #{12 15}
-                 :all #{12 14 15} :none #{}}
+(def orb {:pins {:blue #{12}       :green   #{14}    :red     #{15}
+                 :cyan #{12 14}    :magenta #{12 15} :yellow #{14 15}
+                 :all  #{12 14 15} :none    #{}}
           :pin-max 255
           :pin-min 0
           :color-ramp-interval 3
@@ -15,7 +15,7 @@
   (loop [pids (enumeration-seq (CommPortIdentifier/getPortIdentifiers))]
     (if (= CommPortIdentifier/PORT_SERIAL (.getPortType (first pids)))
       (let [serial-port (.open (first pids) "ArduieensyExtremeFeedback" 2000)]
-        (.setSerialPortParams serial-port 57600 SerialPort/DATABITS_8 SerialPort/STOPBITS_1 SerialPort/PARITY_NONE)            
+        (.setSerialPortParams serial-port 57600 SerialPort/DATABITS_8 SerialPort/STOPBITS_1 SerialPort/PARITY_NONE)
         (.getOutputStream serial-port))
       (recur (rest pids)))))
 
@@ -46,7 +46,7 @@
               pin (get-in orb [:pins color])]
         (write-to-pin! orb pin value)
         (Thread/sleep (orb :color-ramp-interval)))))
- 
+
 (defn- set-color!
   ([orb color]
      (set-color! orb color false))

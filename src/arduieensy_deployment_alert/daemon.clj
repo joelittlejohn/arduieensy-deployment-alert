@@ -1,7 +1,7 @@
 (ns arduieensy-deployment-alert.daemon
-  (:require [clj-http.client :as client])
+  (:require [clj-http.client :as http])
   (:require [arduieensy-deployment-alert.orb :as orb])
-  (:require [clojure.contrib.string :as string])
+  (:require [clojure.string :as str])
   (:gen-class))
 
 (def current-pipeline-url
@@ -10,19 +10,21 @@
 (def current-badger-url
   (str (System/getenv "PIPELINE_URL") "/ws/2.x/badgers/current"))
 
-(def users [])
+(def users
+  (str/split (get (System/getenv) "ALERT_USERS" "jlittlej") #"\s"))
 
 (defn- pipeline-state []
-  (if-let [body ((client/get current-pipeline-url
-                             {:as :json
-                              :throw-exceptions false}) :body)]
-    {:failed? (body :inFailedState)
-     :waiting? ((last (body :environmentDeployments)) :requiresInput)}))
+  (let [response (http/get current-pipeline-url {:as :json
+                                                 :throw-exceptions false})
+        user (-> response :body :user)]
+    (when (and (= 200 (response :status)) (or (empty? users) (some #{user} users)))
+      {:failed? (or (-> response :body :inFailedState)
+                    (-> response :body :environmentDeployments last :inFailedState))
+       :waiting? (-> response :body :environmentDeployments last :requiresInput)})))
 
 (defn- badger-state []
-  (if-let [body ((client/get current-badger-url
-                             {:as :json
-                              :throw-exceptions false}) :body)]
+  (if-let [body ((http/get current-badger-url {:as :json
+                                               :throw-exceptions false}) :body)]
     (let [user (body :acquireUser)]
       (if (or (empty? users) (some #{user} users))
         user))))

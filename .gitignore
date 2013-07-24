@@ -8,3 +8,5 @@ target
 /.lein-failures
 /checkouts
 /.lein-deps-sum
+*.out
+*.pid
